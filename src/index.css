@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ── Add this to your index.css or App.css ── */
+
+/* Spinner for auth loading button */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Remove default input autofill background (Chrome) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #000 inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #8b5cf6;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Remove default placeholder color (Firefox override) */
+input::placeholder {
+  color: #374151 !important;
+  opacity: 1;
+}
