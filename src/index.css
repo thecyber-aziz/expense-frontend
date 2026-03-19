@@ -1,26 +1,164 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* ── Add this to your index.css or App.css ── */
 
-/* Spinner for auth loading button */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-/* Remove default input autofill background (Chrome) */
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px #000 inset !important;
-  -webkit-text-fill-color: #fff !important;
-  caret-color: #8b5cf6;
-  transition: background-color 9999s ease-in-out 0s;
+/* ═══════════════════════════════════════════════════
+   BASE — autofill & placeholder resets
+   ═══════════════════════════════════════════════════ */
+input::placeholder { color: #9ca3af !important; opacity: 1; }
+
+/* ═══════════════════════════════════════════════════
+   LIGHT MODE (default — data-theme="light")
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page shell ── */
+[data-theme="light"] body {
+  background: #f0ecff !important;
 }
 
-/* Remove default placeholder color (Firefox override) */
-input::placeholder {
-  color: #374151 !important;
-  opacity: 1;
+/* ── AuthPage outer wrapper (uses inline style background) ── */
+[data-theme="light"] div[style*="030308"],
+[data-theme="light"] div[style*="06060f"],
+[data-theme="light"] div[style*="050510"] {
+  background: linear-gradient(145deg,#f5f3ff 0%,#ede9fe 50%,#e4dcff 100%) !important;
+  color: #1a1a2e !important;
+}
+
+/* ── AuthPage form card ── */
+[data-theme="light"] div[style*="rgba(12,8,28"],
+[data-theme="light"] div[style*="rgba(6,6,18"] {
+  background: #ffffff !important;
+  border-color: rgba(109,40,217,0.15) !important;
+  box-shadow: 0 8px 40px rgba(109,40,217,0.1) !important;
+}
+
+/* ── AuthPage mode switcher bar ── */
+[data-theme="light"] div[style*="rgba(0,0,0,0.5)"] {
+  background: rgba(109,40,217,0.07) !important;
+  border-color: rgba(109,40,217,0.12) !important;
+}
+
+/* ── AuthPage inputs ── */
+[data-theme="light"] input[style*="rgba(0,0,0"] {
+  background: #f5f3ff !important;
+  border-color: rgba(109,40,217,0.2) !important;
+  color: #1a1a2e !important;
+}
+
+/* ── AuthPage logo box ── */
+[data-theme="light"] div[style*="1a0a3d"] {
+  background: linear-gradient(145deg,#ede9fe,#ddd6fe) !important;
+  border-color: rgba(109,40,217,0.25) !important;
+}
+
+/* ── AuthPage footer text ── */
+[data-theme="light"] p[style*="rgba(255,255,255,0.1)"] {
+  color: rgba(109,40,217,0.35) !important;
+}
+
+/* ── AuthPage subtitle text ── */
+[data-theme="light"] p[style*="#374151"] {
+  color: #6b7280 !important;
+}
+
+/* ── AuthPage orbs (reduce in light) ── */
+[data-theme="light"] div[style*="radial-gradient(circle, rgba(88,28,135"] {
+  opacity: 0.25 !important;
+}
+[data-theme="light"] div[style*="radial-gradient(circle, rgba(30,27,75"] {
+  opacity: 0.15 !important;
+}
+[data-theme="light"] div[style*="radial-gradient(circle, rgba(255,255,255,0.04)"] {
+  opacity: 0.08 !important;
+}
+
+/* ── AuthPage top edge glow ── */
+[data-theme="light"] div[style*="linear-gradient(90deg, transparent 0%, rgba(139,92,246"] {
+  opacity: 0.4 !important;
+}
+
+/* ── AuthPage h1 ── */
+[data-theme="light"] h1 { color: #1a1a2e; }
+
+/* ── Autofill for light mode ── */
+[data-theme="light"] input:-webkit-autofill,
+[data-theme="light"] input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #f5f3ff inset !important;
+  -webkit-text-fill-color: #1a1a2e !important;
+  caret-color: #7c3aed;
+}
+
+/* ── ExpenseTracker: page shell ── */
+[data-theme="light"] .min-h-screen {
+  background: #f0ecff !important;
+  color: #1a1a2e !important;
+}
+
+/* ── ExpenseTracker: cards & panels ── */
+[data-theme="light"] .bg-\[\#0a0a10\],
+[data-theme="light"] .bg-\[\#141420\],
+[data-theme="light"] .bg-\[\#1a1a24\],
+[data-theme="light"] .bg-\[\#1e1e2e\],
+[data-theme="light"] .bg-\[\#2a2a38\] {
+  background-color: #ffffff !important;
+}
+
+/* ── ExpenseTracker: borders ── */
+[data-theme="light"] .border-white\/10,
+[data-theme="light"] .border-white\/\[0\.06\],
+[data-theme="light"] .border-white\/8 {
+  border-color: rgba(109,40,217,0.15) !important;
+}
+
+/* ── ExpenseTracker: text ── */
+[data-theme="light"] .text-white    { color: #1a1a2e !important; }
+[data-theme="light"] .text-gray-300 { color: #374151 !important; }
+[data-theme="light"] .text-gray-400 { color: #4b5563 !important; }
+[data-theme="light"] .text-gray-500 { color: #6b7280 !important; }
+[data-theme="light"] .text-gray-600 { color: #9ca3af !important; }
+[data-theme="light"] .text-gray-700 { color: #9ca3af !important; }
+
+/* ── ExpenseTracker: inputs & selects ── */
+[data-theme="light"] input,
+[data-theme="light"] select {
+  background: #f5f3ff !important;
+  color: #1a1a2e !important;
+  border-color: rgba(109,40,217,0.2) !important;
+}
+[data-theme="light"] input::placeholder { color: #a78bfa !important; }
+
+/* ── ExpenseTracker: white/opacity utility overrides ── */
+[data-theme="light"] .bg-white\/5   { background: rgba(109,40,217,0.05) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\] { background: rgba(109,40,217,0.07) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover { background: rgba(109,40,217,0.08) !important; }
+[data-theme="light"] .hover\:bg-white\/15:hover { background: rgba(109,40,217,0.12) !important; }
+
+/* ── ExpenseTracker: glow orbs (reduce) ── */
+[data-theme="light"] .bg-violet-800 { opacity: 0.05 !important; }
+[data-theme="light"] .bg-cyan-700   { opacity: 0.05 !important; }
+
+/* ── TextSummaryModal backdrop ── */
+[data-theme="light"] .fixed.inset-0.z-50 > div {
+  background: #ffffff !important;
+  border-color: rgba(109,40,217,0.15) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   DARK MODE (user-selected — data-theme="dark")
+   ═══════════════════════════════════════════════════ */
+
+[data-theme="dark"] body {
+  background: #0a0a10 !important;
+}
+
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #0d0d1a inset !important;
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #8b5cf6;
 }
