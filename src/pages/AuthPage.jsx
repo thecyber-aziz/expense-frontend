@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { logIn, signUp } from "./auth";
-import { useTheme } from "./ThemeContext";
+import { logIn, signUp } from "../auth/auth";
+import { useTheme } from "../auth/ThemeContext";
 import {
   User, Mail, Lock, Eye, EyeOff,
   LogIn, UserPlus, Loader2, DollarSign,

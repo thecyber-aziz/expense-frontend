@@ -1,11 +1,13 @@
-import { useTheme } from "./ThemeContext";
+import { userKey }  from "../auth/auth";
+import { useTheme } from "../auth/ThemeContext";
+import { formatCurrency, loadTabData } from "../auth/utils";
 import {
   Settings, Moon, Sun, Shield, Database,
   Trash2, LogOut, Check, X, Info,
-  ChevronRight, Lock, Smartphone,
+  ChevronRight, Lock, Smartphone, Camera, Pencil,
 } from "lucide-react";
-import { useState } from "react";
-import { logOut } from "./auth";
+import { useState, useRef } from "react";
+import { logOut } from "../auth/auth";
 
 export default function SettingsPage({ user, onLogout, onNavigate }) {
   const { dark, toggle } = useTheme();
@@ -13,15 +15,49 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [cleared, setCleared]                     = useState(false);
 
-  const card    = dark ? "#141420" : "#ffffff";
-  const card2   = dark ? "#1a1a24" : "#f9f7ff";
-  const border  = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
+  // ── Profile picture ──
+  const fileInputRef = useRef(null);
+  const dpKey = `dp_${user.email.replace(/[@.]/g, "_")}`;
+  const [dp, setDp]           = useState(() => localStorage.getItem(dpKey) || null);
+  const [dpSaved, setDpSaved] = useState(false);
+
+  const handleDpChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target.result;
+      localStorage.setItem(dpKey, base64);
+      setDp(base64);
+      setDpSaved(true);
+      setTimeout(() => setDpSaved(false), 2000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ── Display name ──
+  const nameKey = `name_${user.email.replace(/[@.]/g, "_")}`;
+  const [displayName, setDisplayName] = useState(() => localStorage.getItem(nameKey) || user.name || user.email.split("@")[0]);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput]     = useState("");
+  const [nameSaved, setNameSaved]     = useState(false);
+
+  const saveRename = () => {
+    if (!nameInput.trim()) return;
+    localStorage.setItem(nameKey, nameInput.trim());
+    setDisplayName(nameInput.trim());
+    setEditingName(false);
+    setNameSaved(true);
+    setTimeout(() => setNameSaved(false), 2000);
+  };
+
+  const card      = dark ? "#141420" : "#ffffff";
+  const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
   const textMain  = dark ? "#ffffff" : "#1a1a2e";
   const textMuted = dark ? "#6b7280" : "#9ca3af";
-  const pageBg  = dark ? "#0a0a10" : "#f0ecff";
+  const pageBg    = dark ? "#0a0a10" : "#f0ecff";
 
   const handleClearData = () => {
-    // clears only this user's data keys
     Object.keys(localStorage)
       .filter(k => k.startsWith(`et_${user.email.replace(/[@.]/g, "_")}`))
       .forEach(k => localStorage.removeItem(k));
@@ -65,16 +101,112 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
           <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: textMuted }}>
             Account
           </p>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-lg font-black text-white shrink-0">
-              {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+          <div className="flex items-center gap-4">
+
+            {/* Avatar — click to change photo */}
+            <div
+              className="relative shrink-0 cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {/* Circle avatar */}
+              <div
+                className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-xl font-black text-white"
+                style={{
+                  background: dp ? "transparent" : "linear-gradient(135deg,#7c3aed,#4338ca)",
+                  border: `2px solid ${border}`,
+                }}
+              >
+                {dp
+                  ? <img src={dp} alt="Profile" className="w-full h-full object-cover" />
+                  : (displayName ? displayName[0].toUpperCase() : user.email[0].toUpperCase())
+                }
+              </div>
+
+              {/* Dark overlay on hover */}
+              <div
+                className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                style={{ background: "rgba(0,0,0,0.45)" }}
+              >
+                <Camera size={18} color="#fff" strokeWidth={2} />
+              </div>
+
+              {/* Small camera badge bottom-right */}
+              <div
+                className="absolute bottom-0 right-0 w-5 h-5 rounded-full flex items-center justify-center pointer-events-none"
+                style={{
+                  background: "linear-gradient(135deg,#7c3aed,#4338ca)",
+                  border: `2px solid ${dark ? "#141420" : "#ffffff"}`,
+                }}
+              >
+                <Camera size={9} color="#fff" strokeWidth={2.5} />
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleDpChange}
+              />
             </div>
-            <div className="min-w-0">
-              {user.name && (
-                <p className="font-bold text-sm sm:text-base truncate" style={{ color: textMain }}>{user.name}</p>
+
+            {/* Name / email + rename */}
+            <div className="flex-1 min-w-0">
+              {editingName ? (
+                <div className="flex items-center gap-1.5 mb-1">
+                  <input
+                    autoFocus
+                    value={nameInput}
+                    onChange={e => setNameInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") saveRename();
+                      if (e.key === "Escape") setEditingName(false);
+                    }}
+                    className="flex-1 rounded-lg px-2 py-1 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-violet-500"
+                    style={{
+                      background: dark ? "#1e1e2e" : "#f5f3ff",
+                      border: `1px solid ${border}`,
+                      color: textMain,
+                      minWidth: 0,
+                    }}
+                  />
+                  <button
+                    onClick={saveRename}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center bg-violet-600 hover:bg-violet-500 transition shrink-0"
+                  >
+                    <Check size={11} color="#fff" />
+                  </button>
+                  <button
+                    onClick={() => setEditingName(false)}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center transition shrink-0"
+                    style={{ background: dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.08)", color: textMuted }}
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <p className="font-bold text-sm sm:text-base truncate" style={{ color: textMain }}>
+                    {displayName}
+                  </p>
+                  <button
+                    onClick={() => { setNameInput(displayName); setEditingName(true); }}
+                    className="shrink-0 p-0.5 rounded transition opacity-60 hover:opacity-100"
+                    style={{ color: "#a78bfa" }}
+                  >
+                    <Pencil size={11} strokeWidth={2.5} />
+                  </button>
+                </div>
               )}
               <p className="text-xs truncate" style={{ color: textMuted }}>{user.email}</p>
+              {(dpSaved || nameSaved) && (
+                <span className="flex items-center gap-1 text-[10px] font-bold mt-1" style={{ color: "#34d399" }}>
+                  <Check size={10} /> {nameSaved ? "Name saved!" : "Photo saved!"}
+                </span>
+              )}
             </div>
+
           </div>
         </div>
 
@@ -101,7 +233,8 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
               </div>
             </div>
             {/* Toggle switch */}
-            <button onClick={toggle}
+            <button
+              onClick={toggle}
               style={{
                 width: 44, height: 24, borderRadius: 99,
                 background: dark ? "#7c3aed" : "rgba(109,40,217,0.15)",
@@ -109,7 +242,8 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
                 position: "relative", cursor: "pointer",
                 transition: "all 0.3s cubic-bezier(.4,0,.2,1)",
                 flexShrink: 0,
-              }}>
+              }}
+            >
               <span style={{
                 position: "absolute", top: 3,
                 left: dark ? 22 : 3,
@@ -160,8 +294,7 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
           {/* Clear data */}
           <div className="px-4 sm:px-5 py-3" style={{ borderTop: `1px solid ${border}` }}>
             {cleared ? (
-              <div className="flex items-center gap-2 text-sm font-semibold"
-                style={{ color: "#34d399" }}>
+              <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: "#34d399" }}>
                 <Check size={15} /> Data cleared successfully
               </div>
             ) : showClearConfirm ? (
@@ -170,20 +303,26 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
                   This will delete all your expenses and tabs. Cannot be undone.
                 </p>
                 <div className="flex gap-2">
-                  <button onClick={handleClearData}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition">
+                  <button
+                    onClick={handleClearData}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition"
+                  >
                     <Trash2 size={12} /> Yes, Clear All
                   </button>
-                  <button onClick={() => setShowClearConfirm(false)}
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
-                    style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", color: textMuted, border: `1px solid ${border}` }}>
+                    style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", color: textMuted, border: `1px solid ${border}` }}
+                  >
                     <X size={12} /> Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowClearConfirm(true)}
-                className="flex items-center justify-between w-full group">
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                className="flex items-center justify-between w-full group"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ background: "rgba(239,68,68,0.1)" }}>
@@ -240,20 +379,26 @@ export default function SettingsPage({ user, onLogout, onNavigate }) {
               <div>
                 <p className="text-xs mb-2" style={{ color: textMuted }}>Are you sure you want to sign out?</p>
                 <div className="flex gap-2">
-                  <button onClick={handleLogout}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition"
+                  >
                     <LogOut size={12} /> Yes, Sign Out
                   </button>
-                  <button onClick={() => setShowLogoutConfirm(false)}
+                  <button
+                    onClick={() => setShowLogoutConfirm(false)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition"
-                    style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", color: textMuted, border: `1px solid ${border}` }}>
+                    style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", color: textMuted, border: `1px solid ${border}` }}
+                  >
                     <X size={12} /> Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowLogoutConfirm(true)}
-                className="flex items-center justify-between w-full">
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="flex items-center justify-between w-full"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                     style={{ background: "rgba(239,68,68,0.1)" }}>

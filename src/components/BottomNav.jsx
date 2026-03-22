@@ -1,5 +1,5 @@
 import { Home, Settings } from "lucide-react";
-import { useTheme } from "./ThemeContext";
+import { useTheme } from "../auth/ThemeContext";
 
 export default function BottomNav({ activePage, onNavigate }) {
   const { dark } = useTheme();
@@ -14,19 +14,20 @@ export default function BottomNav({ activePage, onNavigate }) {
 
   return (
     <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0,
-      zIndex: 9998,
-      background: bg,
-      borderTop: `1px solid ${border}`,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      display: "flex",
-      justifyContent: "center",
-      padding: "0 0 env(safe-area-inset-bottom, 0px)",
-      boxShadow: dark
-        ? "0 -4px 24px rgba(0,0,0,0.4)"
-        : "0 -4px 24px rgba(109,40,217,0.08)",
-    }}>
+  position: "fixed", bottom: 0, left: 0, right: 0,
+  zIndex: 9998,
+  background: bg,
+  borderTop: `1px solid ${border}`,
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  display: "flex",
+  justifyContent: "center",
+  paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
+  margin: 0,
+  boxShadow: dark
+    ? "0 -4px 24px rgba(0,0,0,0.4)"
+    : "0 -4px 24px rgba(109,40,217,0.08)",
+}}>
       <div style={{
         display: "flex", width: "100%", maxWidth: 500,
         padding: "6px 24px",

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { getSession } from "./auth";
-import AuthPage from "./AuthPage";
-import ExpenseTracker from "./ExpenseTracker";
-import SettingsPage from "./SettingPage";
-import BottomNav from "./BottomNav";
-import { ThemeProvider } from "./ThemeContext";
+import { getSession }    from "./auth/auth";
+import { ThemeProvider } from "./auth/ThemeContext";
+import AuthPage          from "./pages/AuthPage";
+import ExpenseTracker    from "./pages/ExpenseTracker";
+import SettingsPage      from "./pages/SettingPage";
+import BottomNav         from "./components/BottomNav";
 
 export default function App() {
   const [user, setUser]             = useState(() => getSession());
@@ -21,7 +21,7 @@ export default function App() {
         <AuthPage onAuth={(u) => setUser(u)} />
       ) : (
         <>
-          <div style={{ paddingBottom: 72 }}>
+          <div style={{ paddingBottom: 60 }}>
             {activePage === "home" && (
               <ExpenseTracker user={user} onLogout={handleLogout} />
             )}

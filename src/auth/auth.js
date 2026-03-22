@@ -7,7 +7,7 @@ const USERS_KEY = "et_users";
 const SESSION_KEY = "et_session";
 
 function getUsers() {
-  try {
+  try { 
     const saved = localStorage.getItem(USERS_KEY);
     return saved ? JSON.parse(saved) : {};
   } catch { return {}; }
