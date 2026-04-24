@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getSession }    from "./auth/auth";
+import { getSession, logOut }    from "./auth/auth";
 import { ThemeProvider } from "./auth/ThemeContext";
 import AuthPage          from "./pages/AuthPage";
 import ExpenseTracker    from "./pages/ExpenseTracker";
@@ -11,6 +11,7 @@ export default function App() {
   const [activePage, setActivePage] = useState("home");
 
   const handleLogout = () => {
+    logOut(); // Clear localStorage session
     setUser(null);
     setActivePage("home");
   };

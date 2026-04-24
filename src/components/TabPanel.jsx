@@ -20,7 +20,7 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
   const [expenses, setExpenses]           = useState(() => loadTabData(email, tabId).expenses);
   const [name, setName]                   = useState("");
   const [amount, setAmount]               = useState("");
-  const [category, setCategory]           = useState("Food");
+  const [category, setCategory]           = useState("food");
   const [filter, setFilter]               = useState("All");
   const [editId, setEditId]               = useState(null);
   const [error, setError]                 = useState("");
@@ -35,9 +35,28 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
     const data = loadTabData(email, tabId);
     setExpenses(data.expenses);
     setBalance(data.balance);
-    setName(""); setAmount(""); setCategory("Food");
+    setName(""); setAmount(""); setCategory("food");
     setFilter("All"); setEditId(null); setError("");
   }, [email, tabId]);
+
+  const getCategoryInfo = (label) => CATEGORIES.find(c => c.label === label) || CATEGORIES[6];
+
+  const saveBalance = () => {
+    const val = Number(balanceInput);
+    if (!isNaN(val) && val >= 0) { setBalance(val); setEditBalance(false); }
+  };
+
+  const categoryTotals = CATEGORIES.map(cat => ({
+    ...cat,
+    total: expenses.filter(e => e.category === cat.label).reduce((s, e) => s + e.amount, 0),
+  })).filter(c => c.total > 0);
+
+  const card      = dark ? "#141420" : "#ffffff";
+  const card2     = dark ? "#1a1a24" : "#f9f7ff";
+  const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
+  const textMain  = dark ? "#fff"    : "#1a1a2e";
+  const textMuted = dark ? "#6b7280" : "#9ca3af";
+  const inputBg   = dark ? "#1e1e2e" : "#f5f3ff";
 
   const today     = new Date().toISOString().split("T")[0];
   const total     = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -59,7 +78,7 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
         ...prev,
       ]);
     }
-    setName(""); setAmount(""); setCategory("Food");
+    setName(""); setAmount(""); setCategory("food");
     setAnimateTotal(true);
     setTimeout(() => setAnimateTotal(false), 600);
     nameRef.current?.focus();
@@ -74,24 +93,6 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
   };
 
   const handleDelete    = (id) => { setExpenses(prev => prev.filter(e => e.id !== id)); setShowConfirm(null); };
-  const getCategoryInfo = (label) => CATEGORIES.find(c => c.label === label) || CATEGORIES[6];
-
-  const saveBalance = () => {
-    const val = Number(balanceInput);
-    if (!isNaN(val) && val >= 0) { setBalance(val); setEditBalance(false); }
-  };
-
-  const categoryTotals = CATEGORIES.map(cat => ({
-    ...cat,
-    total: expenses.filter(e => e.category === cat.label).reduce((s, e) => s + e.amount, 0),
-  })).filter(c => c.total > 0);
-
-  const card      = dark ? "#141420" : "#ffffff";
-  const card2     = dark ? "#1a1a24" : "#f9f7ff";
-  const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
-  const textMain  = dark ? "#fff"    : "#1a1a2e";
-  const textMuted = dark ? "#6b7280" : "#9ca3af";
-  const inputBg   = dark ? "#1e1e2e" : "#f5f3ff";
 
   const downloadPDF = () => {
     const doc = new jsPDF();
@@ -283,7 +284,7 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
             </button>
             {editId && (
               <button
-                onClick={() => { setEditId(null); setName(""); setAmount(""); setCategory("Food"); setError(""); }}
+                onClick={() => { setEditId(null); setName(""); setAmount(""); setCategory("food"); setError(""); }}
                 className="px-4 sm:px-5 rounded-xl font-medium text-sm flex items-center gap-1.5 transition"
                 style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", border: `1px solid ${border}`, color: textMuted }}
               >
@@ -301,11 +302,38 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
           const Icon    = catInfo?.icon;
           return (
             <button key={f} onClick={() => setFilter(f)}
-              className="px-2.5 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-semibold transition-all border whitespace-nowrap flex-shrink-0 flex items-center gap-1"
+              className="px-2.5 sm:px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-semibold transition-all border whitespace-nowrap flex-shrink-0 flex items-center gap-1 cursor-pointer"
               style={{
                 background: filter === f ? "#7c3aed" : "transparent",
                 border:     filter === f ? "1px solid #7c3aed" : `1px solid ${border}`,
                 color:      filter === f ? "#fff" : textMuted,
+                boxShadow: "0 0 0 0 transparent",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+                if (filter !== f) {
+                  e.currentTarget.style.background = dark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.15)";
+                  e.currentTarget.style.borderColor = "#a78bfa";
+                  e.currentTarget.style.color = "#a78bfa";
+                  e.currentTarget.style.boxShadow = dark 
+                    ? "0 4px 12px rgba(124,58,237,0.2)" 
+                    : "0 4px 12px rgba(124,58,237,0.15)";
+                } else {
+                  e.currentTarget.style.boxShadow = dark 
+                    ? "0 6px 16px rgba(124,58,237,0.3)" 
+                    : "0 6px 16px rgba(124,58,237,0.2)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transition = "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)";
+                if (filter !== f) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = border;
+                  e.currentTarget.style.color = textMuted;
+                  e.currentTarget.style.boxShadow = "0 0 0 0 transparent";
+                } else {
+                  e.currentTarget.style.boxShadow = "0 0 0 0 transparent";
+                }
               }}
             >
               {f === "All"
@@ -320,7 +348,7 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
       <div className="flex flex-col gap-2">
         {filtered.length === 0 && (
           <div className="text-center py-12 sm:py-16" style={{ color: textMuted }}>
-            <PiggyBank size={48} className="mx-auto mb-3 opacity-20" />
+            <Wallet size={48} className="mx-auto mb-3 opacity-20" />
             <p className="text-xs sm:text-sm">No expenses yet. Add one above!</p>
           </div>
         )}
@@ -344,7 +372,7 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
               </div>
               <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                 <p className="font-black text-sm sm:text-lg" style={{ color: textMain }}>{formatCurrency(expense.amount)}</p>
-                <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 transition-opacity">
                   <button
                     onClick={() => handleEdit(expense)}
                     className="p-1 sm:p-1.5 rounded-lg transition"

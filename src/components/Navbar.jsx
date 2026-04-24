@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useTheme } from "../auth/ThemeContext";
-import { FolderOpen, Pencil, Plus, X, Check } from "lucide-react";
+import { FolderOpen, Pencil, Plus, X, Check, AlertCircle } from "lucide-react";
 
 export default function Navbar({
   tabs, activeTab, setActiveTab,
@@ -9,6 +10,7 @@ export default function Navbar({
   addTab, deleteTab,
 }) {
   const { dark } = useTheme();
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
   const textMain  = dark ? "#fff"    : "#1a1a2e";
   const textMuted = dark ? "#6b7280" : "#9ca3af";
@@ -66,7 +68,7 @@ export default function Navbar({
 
               {tabs.length > 1 && (
                 <button
-                  onClick={e => { e.stopPropagation(); deleteTab(tab.id); }}
+                  onClick={e => { e.stopPropagation(); setDeleteConfirm(tab.id); }}
                   className="p-1 sm:p-1.5 rounded-lg transition"
                   style={{
                     background: dark ? "rgba(255,255,255,0.05)" : "rgba(109,40,217,0.06)",
@@ -108,6 +110,39 @@ export default function Navbar({
       >
         <Plus size={13} strokeWidth={2} /> New Tab
       </button>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-2xl p-6 sm:p-8 max-w-sm w-full shadow-2xl" style={{ background: dark ? "#141420" : "#ffffff", border: `1px solid ${border}` }}>
+            <div className="flex items-start gap-3 mb-4">
+              <div className="bg-red-500/20 p-3 rounded-lg">
+                <AlertCircle size={24} color="#f87171" />
+              </div>
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold" style={{ color: textMain }}>Delete Tab?</h3>
+                <p className="text-xs sm:text-sm mt-1" style={{ color: textMuted }}>This action cannot be undone. All expenses in this tab will be permanently deleted.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t" style={{ borderColor: border }}>
+              <button
+                onClick={() => { deleteTab(deleteConfirm); setDeleteConfirm(null); }}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm bg-red-600 hover:bg-red-500 text-white transition-all flex items-center justify-center gap-2"
+              >
+                <X size={16} /> Delete
+              </button>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
+                style={{ background: dark ? "rgba(255,255,255,0.06)" : "rgba(109,40,217,0.06)", color: textMuted, border: `1px solid ${border}` }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

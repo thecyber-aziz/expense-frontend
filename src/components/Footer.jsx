@@ -38,13 +38,13 @@ export default function Footer() {
               className="w-1.5 h-1.5 rounded-full bg-violet-500 inline-block"
               style={{ boxShadow: "0 0 6px #7c3aed" }}
             />
-            v 2.0.1
+            v 2.0.3
           </span>
           <span style={{ color: textMuted, fontSize: 10 }}>· Stable</span>
         </div>
 
         <div className="flex items-center gap-3 text-[10px]" style={{ color: textMuted }}>
-          <span className="flex items-center gap-1"><Lock size={10} /> Local only</span>
+         
           <span>·</span>
           <span className="flex items-center gap-1"><TrendingUp size={10} /> No tracking</span>
           <span>·</span>

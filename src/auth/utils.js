@@ -6,6 +6,7 @@ export function formatCurrency(amount) {
   }).format(amount);
 }
 
+// Legacy localStorage functions - kept for backward compatibility only
 export function loadTabMeta(email) {
   try {
     const saved = localStorage.getItem(userKey(email, "tabs_meta"));
