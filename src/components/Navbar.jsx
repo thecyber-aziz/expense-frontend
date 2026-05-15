@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTheme } from "../auth/ThemeContext";
-import { FolderOpen, Pencil, Plus, X, Check, AlertCircle } from "lucide-react";
+import { User, Pencil, Plus, X, Check, AlertCircle, MoreVertical, Trash2 } from "lucide-react";
 
 export default function Navbar({
   tabs, activeTab, setActiveTab,
@@ -11,9 +11,24 @@ export default function Navbar({
 }) {
   const { dark } = useTheme();
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
   const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
   const textMain  = dark ? "#fff"    : "#1a1a2e";
   const textMuted = dark ? "#6b7280" : "#9ca3af";
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setOpenMenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="flex items-center gap-1.5 flex-nowrap overflow-x-auto pb-2 mb-5 scrollbar-hide">
@@ -38,7 +53,7 @@ export default function Navbar({
               <button onClick={() => setRenamingId(null)} style={{ color: textMuted }}><X size={12} /></button>
             </div>
           ) : (
-            <div className="flex items-center gap-1">
+            <div className="relative">
               <button
                 onClick={() => setActiveTab(tab.id)}
                 onDoubleClick={() => startRename(tab)}
@@ -49,43 +64,82 @@ export default function Navbar({
                   color:      activeTab === tab.id ? "#fff" : textMuted,
                 }}
               >
-                <FolderOpen size={13} strokeWidth={2} /> {tab.name}
+                <User size={13} strokeWidth={2} /> {tab.name}
+
+                {activeTab === tab.id && (
+                  <button
+                    ref={buttonRef}
+                    onClick={e => { 
+                      e.stopPropagation(); 
+                      if (openMenu === tab.id) {
+                        setOpenMenu(null);
+                      } else {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setMenuPosition({
+                          top: rect.bottom + 5,
+                          left: rect.left,
+                        });
+                        setOpenMenu(tab.id);
+                      }
+                    }}
+                    className="ml-auto p-0.5 rounded transition hover:opacity-80"
+                    style={{
+                      color: "#fff",
+                    }}
+                  >
+                    <MoreVertical size={12} strokeWidth={2} />
+                  </button>
+                )}
               </button>
 
-              {activeTab === tab.id && (
-                <button
-                  onClick={() => startRename(tab)}
-                  className="p-1 sm:p-1.5 rounded-lg transition"
+              {/* Dropdown Menu */}
+              {activeTab === tab.id && openMenu === tab.id && (
+                <div
+                  ref={menuRef}
+                  className="fixed rounded-lg shadow-lg z-[9999] min-w-[140px]"
                   style={{
-                    background: dark ? "rgba(255,255,255,0.05)" : "rgba(109,40,217,0.06)",
+                    background: dark ? "#1e1e2e" : "#ffffff",
                     border: `1px solid ${border}`,
-                    color: textMuted,
+                    top: `${menuPosition.top}px`,
+                    left: `${menuPosition.left}px`,
                   }}
                 >
-                  <Pencil size={11} strokeWidth={2} />
-                </button>
-              )}
+                  <button
+                    onClick={e => { e.stopPropagation(); startRename(tab); setOpenMenu(null); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs sm:text-sm hover:opacity-80 transition text-left rounded-t-lg"
+                    style={{
+                      color: textMain,
+                      background: dark ? "transparent" : "transparent",
+                    }}
+                    onMouseOver={e => {
+                      e.currentTarget.style.background = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.06)";
+                    }}
+                    onMouseOut={e => {
+                      e.currentTarget.style.background = dark ? "transparent" : "transparent";
+                    }}
+                  >
+                    <Pencil size={13} strokeWidth={2} /> Rename
+                  </button>
 
-              {tabs.length > 1 && (
-                <button
-                  onClick={e => { e.stopPropagation(); setDeleteConfirm(tab.id); }}
-                  className="p-1 sm:p-1.5 rounded-lg transition"
-                  style={{
-                    background: dark ? "rgba(255,255,255,0.05)" : "rgba(109,40,217,0.06)",
-                    border: `1px solid ${border}`,
-                    color: textMuted,
-                  }}
-                  onMouseOver={e => {
-                    e.currentTarget.style.background = "rgba(239,68,68,0.1)";
-                    e.currentTarget.style.color = "#f87171";
-                  }}
-                  onMouseOut={e => {
-                    e.currentTarget.style.background = dark ? "rgba(255,255,255,0.05)" : "rgba(109,40,217,0.06)";
-                    e.currentTarget.style.color = textMuted;
-                  }}
-                >
-                  <X size={11} strokeWidth={2} />
-                </button>
+                  {tabs.length > 1 && (
+                    <button
+                      onClick={e => { e.stopPropagation(); setDeleteConfirm(tab.id); setOpenMenu(null); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs sm:text-sm hover:opacity-80 transition text-left rounded-b-lg"
+                      style={{
+                        color: "#f87171",
+                        background: dark ? "transparent" : "transparent",
+                      }}
+                      onMouseOver={e => {
+                        e.currentTarget.style.background = "rgba(239,68,68,0.1)";
+                      }}
+                      onMouseOut={e => {
+                        e.currentTarget.style.background = dark ? "transparent" : "transparent";
+                      }}
+                    >
+                      <Trash2 size={13} strokeWidth={2} /> Delete
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}

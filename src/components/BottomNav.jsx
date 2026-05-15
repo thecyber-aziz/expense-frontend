@@ -1,4 +1,4 @@
-import { Home, Settings } from "lucide-react";
+import { Home, Settings, History } from "lucide-react";
 import { useTheme } from "../auth/ThemeContext";
 
 export default function BottomNav({ activePage, onNavigate }) {
@@ -9,6 +9,7 @@ export default function BottomNav({ activePage, onNavigate }) {
 
   const tabs = [
     { id: "home",     label: "Home",     Icon: Home     },
+    { id: "history",  label: "History",  Icon: History  },
     { id: "settings", label: "Settings", Icon: Settings },
   ];
 

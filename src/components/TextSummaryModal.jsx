@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FileText, X, Check, Copy, Download, Share2 } from "lucide-react";
 import { formatCurrency } from "../auth/utils";
 
-export default function TextSummaryModal({ expenses, balance, total, remaining, tabName, onClose, dark }) {
+export default function TextSummaryModal({ expenses, balance, onlineBalance, total, remaining, tabName, onClose, dark }) {
   const [copied, setCopied] = useState(false);
 
   const generateText = () => {
@@ -21,7 +21,8 @@ export default function TextSummaryModal({ expenses, balance, total, remaining, 
     return [
       `EXPENSE REPORT — ${tabName.toUpperCase()}`,
       `Generated: ${date}`, line,
-      `Wallet Balance : ${formatCurrency(balance)}`,
+      `Cash Balance   : ${formatCurrency(balance)}`,
+      `Online Balance : ${formatCurrency(onlineBalance)}`,
       `Total Spent    : ${formatCurrency(total)}`,
       `Remaining      : ${formatCurrency(remaining)}`, line,
       `BY CATEGORY`, catLines || "  No expenses yet.", line,

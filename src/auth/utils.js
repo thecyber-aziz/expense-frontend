@@ -18,11 +18,13 @@ export function loadTabData(email, tabId) {
   try {
     const expenses = localStorage.getItem(userKey(email, `expenses_${tabId}`));
     const balance  = localStorage.getItem(userKey(email, `balance_${tabId}`));
+    const onlineBalance  = localStorage.getItem(userKey(email, `onlineBalance_${tabId}`));
     return {
       expenses: expenses ? JSON.parse(expenses) : [],
       balance:  balance  ? Number(balance) : 0,
+      onlineBalance: onlineBalance ? Number(onlineBalance) : 0,
     };
-  } catch { return { expenses: [], balance: 0 }; }
+  } catch { return { expenses: [], balance: 0, onlineBalance: 0 }; }
 }
 
 export function saveTabExpenses(email, tabId, expenses) {
@@ -33,7 +35,12 @@ export function saveTabBalance(email, tabId, balance) {
   localStorage.setItem(userKey(email, `balance_${tabId}`), balance);
 }
 
+export function saveTabOnlineBalance(email, tabId, onlineBalance) {
+  localStorage.setItem(userKey(email, `onlineBalance_${tabId}`), onlineBalance);
+}
+
 export function deleteTabStorage(email, tabId) {
   localStorage.removeItem(userKey(email, `expenses_${tabId}`));
   localStorage.removeItem(userKey(email, `balance_${tabId}`));
+  localStorage.removeItem(userKey(email, `onlineBalance_${tabId}`));
 }

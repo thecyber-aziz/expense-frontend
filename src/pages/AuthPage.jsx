@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { logIn, signUp } from "../auth/auth";
 import { useTheme } from "../auth/ThemeContext";
-import { googleSignIn } from "../api/authApi";
+import { googleSignIn, loginUser, registerUser } from "../api/authApi";
+import { setAuthToken } from "../api/config.js";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../auth/firebase";
 import {
@@ -139,24 +139,42 @@ export default function AuthPage({ onAuth }) {
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
 
-  const handleSubmit = () => {
-    setError(""); setSuccess("");
+  const handleSubmit = async () => {
+    setError(""); 
+    setSuccess("");
     const em = email.trim().toLowerCase();
     if (mode === "signup" && !name.trim()) return setError("Please enter your full name.");
     if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return setError("Enter a valid email address.");
     if (!password || password.length < 6) return setError("Password must be at least 6 characters.");
+    
     setLoading(true);
-    setTimeout(() => {
-      const result = mode === "login" ? logIn(em, password) : signUp(em, password, name);
+    try {
+      let result;
+      if (mode === "login") {
+        result = await loginUser(em, password);
+      } else {
+        result = await registerUser(name, em, password);
+      }
+      
       setLoading(false);
-      if (!result.ok) return setError(result.error);
+      
+      if (!result.success) {
+        return setError(result.message || "Authentication failed");
+      }
+      
+      // Token is already set by loginUser/registerUser via setAuthToken()
       if (mode === "signup") {
         setSuccess("Account created! Signing you in…");
-        setTimeout(() => onAuth(result.user), 900);
+        setTimeout(() => onAuth(result.data), 900);
       } else {
-        onAuth(result.user);
+        setSuccess("Signed in successfully!");
+        setTimeout(() => onAuth(result.data), 600);
       }
-    }, 550);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message || "Authentication failed. Please try again.");
+      console.error('Auth error:', err);
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -200,12 +218,6 @@ export default function AuthPage({ onAuth }) {
         setError(response.message || "Google sign-in failed");
       }
     } catch (error) {
-      // ⚠️  COOP warnings from Firefox - ignore silently
-      if (error?.message?.includes('Cross-Origin-Opener-Policy')) {
-        console.warn('⚠️  COOP warning (Firefox browser policy, can be ignored)');
-        return; // Don't show error to user
-      }
-
       // Handle Firebase-specific errors
       if (error?.code === 'auth/popup-blocked') {
         console.error('❌ Popup blocked:', error.message);
@@ -213,6 +225,11 @@ export default function AuthPage({ onAuth }) {
       } else if (error?.code === 'auth/popup-closed-by-user') {
         console.error('❌ Popup closed by user:', error.message);
         setError("You closed the Google sign-in popup. Please try again.");
+      } else if (error?.message?.includes('window.closed')) {
+        // ⚠️ COOP/COEP warning from Firefox/Chrome - Firebase internally checks popup.window.closed
+        // This is a browser security policy check and doesn't affect functionality. Suppress silently.
+        console.warn('⚠️ Browser popup policy check (doesn\'t affect auth)');
+        return;
       } else {
         console.error('❌ Google Sign-In Error:', error);
         setError(error.message || "Failed to sign in with Google");

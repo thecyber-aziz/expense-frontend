@@ -1,17 +1,16 @@
-/**
- * ✅ COMPLETE WORKING FRONTEND API
- * All authentication and user management functions
- * File: src/api/authApi.js
- */
+// frontend/src/api/authApi.js
+// ✅ FIXED - Complete authentication API with proper token handling
 
 import { apiCall, setAuthToken, clearAuth, SESSION_KEY } from './config.js';
 
 console.log('📚 Auth API module loaded');
 
+const TOKEN_KEY = "et_auth_token";
+
 /**
  * Save user session to localStorage
  */
-const saveSession = (userData) => {
+const saveSession = (userData, token) => {
   const session = {
     _id: userData._id,
     email: userData.email,
@@ -20,6 +19,10 @@ const saveSession = (userData) => {
     loginTime: new Date().toISOString(),
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+    console.log('✅ Token saved to localStorage');
+  }
   console.log('✅ Session saved to localStorage');
 };
 
@@ -37,6 +40,19 @@ export const getSession = () => {
 };
 
 /**
+ * Get auth token from localStorage
+ */
+export const getAuthToken = () => {
+  try {
+    const token = localStorage.getItem(TOKEN_KEY) || null;
+    return token;
+  } catch (error) {
+    console.error('❌ Error retrieving token:', error);
+    return null;
+  }
+};
+
+/**
  * Register user with email and password
  */
 export const registerUser = async (name, email, password) => {
@@ -49,9 +65,12 @@ export const registerUser = async (name, email, password) => {
     });
 
     if (data.success && data.token && data.data) {
+      // ✅ CRITICAL - Set token in memory AND localStorage
       setAuthToken(data.token);
-      saveSession(data.data);
+      saveSession(data.data, data.token);
       console.log('✅ Registration successful');
+    } else {
+      console.error('❌ Registration response invalid:', data);
     }
 
     return data;
@@ -74,9 +93,12 @@ export const loginUser = async (email, password) => {
     });
 
     if (data.success && data.token && data.data) {
+      // ✅ CRITICAL - Set token in memory AND localStorage
       setAuthToken(data.token);
-      saveSession(data.data);
-      console.log('✅ Login successful');
+      saveSession(data.data, data.token);
+      console.log('✅ Login successful, token set');
+    } else {
+      console.error('❌ Login response invalid:', data);
     }
 
     return data;
@@ -87,24 +109,23 @@ export const loginUser = async (email, password) => {
 };
 
 /**
- * ✅ COMPLETE WORKING GOOGLE SIGN-IN FUNCTION
- * This handles Google authentication with proper error handling
+ * Google Sign-In with Firebase token
  */
-export const googleSignIn = async (firebaseUserOrToken) => {
+export const googleSignIn = async (firebaseUserData) => {
   try {
     console.log('🔐 Processing Google Sign-In...');
 
     // Build payload
     let payload;
     
-    if (typeof firebaseUserOrToken === 'string') {
+    if (typeof firebaseUserData === 'string') {
       // Token string
-      payload = { firebaseToken: firebaseUserOrToken };
+      payload = { firebaseToken: firebaseUserData };
       console.log('📋 Using token string');
-    } else if (firebaseUserOrToken?.idToken) {
+    } else if (firebaseUserData?.idToken) {
       // User object with idToken
-      payload = { firebaseToken: firebaseUserOrToken.idToken };
-      console.log('📋 Using user object token');
+      payload = { firebaseToken: firebaseUserData.idToken };
+      console.log('📋 Using user object with idToken');
     } else {
       throw new Error('No valid Firebase token found');
     }
@@ -126,8 +147,9 @@ export const googleSignIn = async (firebaseUserOrToken) => {
 
     // Handle response
     if (data.success && data.token && data.data) {
+      // ✅ CRITICAL - Set token in memory AND localStorage
       setAuthToken(data.token);
-      saveSession(data.data);
+      saveSession(data.data, data.token);
       console.log('✅ Google Sign-In successful:', data.data.email);
     } else {
       console.error('❌ Backend returned error:', data.message);
@@ -274,6 +296,7 @@ export const logoutUser = () => {
   try {
     clearAuth();
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     console.log('✅ Logged out successfully');
   } catch (error) {
     console.error('❌ Logout error:', error.message);
@@ -285,7 +308,8 @@ export const logoutUser = () => {
  */
 export const isAuthenticated = () => {
   const session = getSession();
-  return session && session.email ? true : false;
+  const token = getAuthToken();
+  return session && session.email && token ? true : false;
 };
 
 /**
