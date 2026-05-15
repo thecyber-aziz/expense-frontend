@@ -162,7 +162,16 @@ export default function AuthPage({ onAuth }) {
         return setError(result.message || "Authentication failed");
       }
       
-      // Token is already set by loginUser/registerUser via setAuthToken()
+      // ✅ CRITICAL - Explicitly restore token from localStorage before navigating
+      // This ensures the token is available in memory for immediate API calls
+      const storedToken = localStorage.getItem("et_auth_token");
+      if (storedToken) {
+        setAuthToken(storedToken);
+        console.log('✅ Token explicitly restored from localStorage for immediate API calls');
+      } else {
+        console.warn('⚠️  No token found in localStorage after login');
+      }
+      
       if (mode === "signup") {
         setSuccess("Account created! Signing you in…");
         setTimeout(() => onAuth(result.data), 900);
@@ -211,6 +220,16 @@ export default function AuthPage({ onAuth }) {
       
       if (response.success) {
         console.log('✅ Backend verified Google token:', response.data.email);
+        
+        // ✅ CRITICAL - Explicitly restore token from localStorage before navigating
+        const storedToken = localStorage.getItem("et_auth_token");
+        if (storedToken) {
+          setAuthToken(storedToken);
+          console.log('✅ Token explicitly restored from localStorage for immediate API calls');
+        } else {
+          console.warn('⚠️  No token found in localStorage after Google sign-in');
+        }
+        
         setSuccess("Signed in successfully!");
         setTimeout(() => onAuth(response.data), 600);
       } else {

@@ -30,7 +30,7 @@ export const apiCall = async (endpoint, options = {}) => {
   if (token) {
     console.log(`   🔐 Token found: ${token.substring(0, 20)}...`);
   } else {
-    console.log(`   ❌ NO TOKEN FOUND!`);
+    console.error(`   ❌ NO TOKEN FOUND! localStorage: ${localStorage.getItem('et_auth_token') ? 'Yes' : 'No'}, memory: ${authToken ? 'Yes' : 'No'}`);
   }
 
   try {
