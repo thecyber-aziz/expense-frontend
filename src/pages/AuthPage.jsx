@@ -321,41 +321,11 @@ export default function AuthPage({ onAuth }) {
             </span>
           </h1>
           <p style={{ color: dark ? "#6b7280" : "#6b7280", fontSize: 13, margin: 0 }}>
-            {mode === "login" ? "Welcome back — sign in to continue" : "Create your account, it's free"}
+            {mode === "login" ? "Welcome back — sign in to continue" : "Create your account"}
           </p>
         </div>
 
-        {/* ── Mode switcher ── */}
-        <div style={{
-          display: "flex", gap: 4, padding: 4, borderRadius: 14, marginBottom: 16,
-          background: dark ? "rgba(0,0,0,0.5)" : "rgba(109,40,217,0.07)",
-          border: dark ? "1px solid rgba(255,255,255,0.04)" : "1px solid rgba(109,40,217,0.12)",
-        }}>
-          {["login", "signup"].map((m) => (
-            <button key={m}
-              onClick={() => { setMode(m); setError(""); setSuccess(""); setName(""); setEmail(""); setPassword(""); }}
-              style={{
-                flex: 1, padding: "10px 0", borderRadius: 10,
-                fontSize: 13, fontWeight: 600, cursor: "pointer",
-                transition: "all 0.25s cubic-bezier(.4,0,.2,1)",
-                border: mode === m ? "1px solid rgba(139,92,246,0.25)" : "1px solid transparent",
-                background: mode === m
-                  ? dark
-                    ? "linear-gradient(135deg, rgba(76,29,149,0.8) 0%, rgba(67,56,202,0.7) 100%)"
-                    : "linear-gradient(135deg, rgba(109,40,217,0.15) 0%, rgba(99,102,241,0.12) 100%)"
-                  : "transparent",
-                color: mode === m ? (dark ? "#e9d5ff" : "#6d28d9") : (dark ? "#4b5563" : "#9ca3af"),
-                boxShadow: mode === m ? "0 4px 16px rgba(88,28,135,0.15)" : "none",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              }}
-            >
-              {m === "login"
-                ? <><LogIn size={13} strokeWidth={2.2} /> Sign In</>
-                : <><UserPlus size={13} strokeWidth={2.2} /> Sign Up</>
-              }
-            </button>
-          ))}
-        </div>
+       
 
         {/* ── Form card ── */}
         <div style={{
@@ -398,7 +368,7 @@ export default function AuthPage({ onAuth }) {
 
             {mode === "signup" && (
               <InputField
-                label="Full Name" type="text" placeholder="e.g. Rahul Sharma"
+                label="Full Name" type="text" placeholder="Your Name"
                 value={name} onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 icon={<User size={15} strokeWidth={2} />} dark={dark}
@@ -487,14 +457,14 @@ export default function AuthPage({ onAuth }) {
         </div>
 
         {/* Footer */}
-        <p style={{
+        {/* <p style={{
           textAlign: "center", fontSize: 10,
           color: dark ? "rgba(255,255,255,0.1)" : "rgba(109,40,217,0.3)",
           marginTop: 20, lineHeight: 1.6,
         }}>
           <ShieldCheck size={10} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
           All data is stored locally on your device only. No server. No tracking. 100% private.
-        </p>
+        </p> */}
       </div>
     </div>
   );

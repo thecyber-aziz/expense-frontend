@@ -15,7 +15,9 @@ import TextSummaryModal from "./TextSummaryModal";
 import { getExpenses, createExpense, updateExpense, deleteExpense } from "../api/expenseApi.js";
 import { updateBalance } from "../api/tabApi.js";
 
-export default function TabPanel({ email, tabId, tabName, dark }) {
+
+export default function TabPanel({ email, tabId, tabName, dark, showBalances }) {
+  // ✅ Add showBalances here{
   const [balance, setBalance]             = useState(() => loadTabData(email, tabId).balance);
   const [onlineBalance, setOnlineBalance] = useState(() => loadTabData(email, tabId).onlineBalance);
   const [editBalance, setEditBalance]     = useState(false);
@@ -394,98 +396,117 @@ export default function TabPanel({ email, tabId, tabName, dark }) {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-5">
-        {/* Cash Balance */}
-        <div className="col-span-1 rounded-xl sm:rounded-2xl p-3 sm:p-4" style={{ background: card2, border: `1px solid ${border}` }}>
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-1">
-              <Wallet size={10} color="#34d399" />
-              <p className="text-[9px] sm:text-xs uppercase tracking-widest" style={{ color: "#34d399" }}>Cash Balance</p>
-            </div>
-            {!editBalance && (
-              <button
-                onClick={() => { setEditBalance(true); setBalanceInput(balance); }}
-                className="p-1 hover:opacity-70 transition"
-              >
-                <Pencil size={9} color="#34d399" />
-              </button>
-            )}
-          </div>
-          {editBalance ? (
-            <div className="flex gap-1 mt-1">
-              <input
-                type="number" value={balanceInput}
-                onChange={e => setBalanceInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && saveBalance()}
-                className="w-full rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
-                style={{ background: inputBg, color: textMain, border: `1px solid ${border}` }}
-              />
-              <button onClick={saveBalance} className="bg-green-600 hover:bg-green-500 px-1.5 sm:px-2 rounded-lg text-white">
-                <Check size={12} />
-              </button>
-            </div>
-          ) : (
-            <p className="text-sm sm:text-lg md:text-xl font-black text-green-400">{formatCurrency(balance)}</p>
-          )}
-        </div>
+   {/* Stats Cards - Add showBalances prop */}
+<div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-5">
+  {/* Cash Balance */}
+  <div className="rounded-xl sm:rounded-2xl p-3 sm:p-4" style={{ background: card2, border: `1px solid ${border}` }}>
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-1.5">
+        <Wallet size={11} color="#34d399" />
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest" style={{ color: "#34d399" }}>Cash balance</p>
+      </div>
+      
+    </div>
 
-        {/* Online Balance */}
-        <div className="col-span-1 rounded-xl sm:rounded-2xl p-3 sm:p-4" style={{ background: card2, border: `1px solid ${border}` }}>
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-1">
-              <ArrowLeftRight size={10} color="#3b82f6" />
-              <p className="text-[9px] sm:text-xs uppercase tracking-widest" style={{ color: "#3b82f6" }}>Online Balance</p>
-            </div>
-            {!editOnlineBalance && (
-              <button
-                onClick={() => { setEditOnlineBalance(true); setOnlineBalanceInput(onlineBalance); }}
-                className="p-1 hover:opacity-70 transition"
-              >
-                <Pencil size={9} color="#3b82f6" />
-              </button>
-            )}
-          </div>
-          {editOnlineBalance ? (
-            <div className="flex gap-1 mt-1">
-              <input
-                type="number" value={onlineBalanceInput}
-                onChange={e => setOnlineBalanceInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && saveOnlineBalance()}
-                className="w-full rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                style={{ background: inputBg, color: textMain, border: `1px solid ${border}` }}
-              />
-              <button onClick={saveOnlineBalance} className="bg-blue-600 hover:bg-blue-500 px-1.5 sm:px-2 rounded-lg text-white">
-                <Check size={12} />
-              </button>
-            </div>
-          ) : (
-            <p className="text-sm sm:text-lg md:text-xl font-black text-blue-400">{formatCurrency(onlineBalance)}</p>
-          )}
-        </div>
+    {/* Big Balance Number */}
+    {editBalance ? (
+      <div className="flex gap-1 mb-3">
+        <input
+          type="number" value={balanceInput}
+          onChange={e => setBalanceInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && saveBalance()}
+          className="w-full rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-green-500"
+          style={{ background: inputBg, color: textMain, border: `1px solid ${border}` }}
+        />
+        <button onClick={saveBalance} className="bg-green-600 hover:bg-green-500 px-1.5 rounded-lg text-white">
+          <Check size={12} />
+        </button>
+      </div>
+    ) : (
+      <p className="text-2xl sm:text-3xl font-black text-green-400 mb-3">
+        {showBalances ? formatCurrency(balance) : "●●●"}
+      </p>
+    )}
 
-        {/* Left Balance */}
-        <div
-          className="col-span-1 rounded-xl sm:rounded-2xl p-3 sm:p-4"
-          style={{
-            background: remaining < 0 ? "rgba(239,68,68,0.1)" : card2,
-            border: remaining < 0 ? "1px solid rgba(239,68,68,0.25)" : `1px solid ${border}`,
-          }}
-        >
-          <div className="flex items-center gap-1 mb-1">
-            <Zap size={10} color={remaining < 0 ? "#f87171" : "#60a5fa"} />
-            <p className="text-[9px] sm:text-xs uppercase tracking-widest" style={{ color: remaining < 0 ? "#f87171" : "#60a5fa" }}>Left Balance</p>
-          </div>
-          <p className="text-sm sm:text-lg md:text-xl font-black" style={{ color: remaining < 0 ? "#f87171" : "#60a5fa" }}>
-            {formatCurrency(remaining)}
+    {/* Rows */}
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <p className="text-xs sm:text-sm font-semibold" style={{ color: textMuted }}>Balance</p>
+        <div className="flex items-center gap-1">
+          
+          <p className="text-sm sm:text-base font-bold" style={{ color: textMain }}>
+            {showBalances ? formatCurrency(balance + expenses.filter(e => e.paymentMethod === "Cash").reduce((s, e) => s + e.amount, 0)) : "●●"}
           </p>
-          {remaining < 0 && (
-            <p className="text-[9px] sm:text-xs mt-1 flex items-center gap-1" style={{ color: "#f87171" }}>
-              <AlertCircle size={9} /> Over budget!
-            </p>
-          )}
         </div>
       </div>
+      <div className="flex justify-between items-center">
+        <p className="text-xs sm:text-sm font-semibold" style={{ color: textMuted }}>Spent</p>
+        <div className="flex items-center gap-0.5">
+          <span style={{ color: "#ef4444", fontSize: "18px" }}>−</span>
+          <p className="text-sm sm:text-base font-bold text-red-400">
+            {showBalances ? formatCurrency(expenses.filter(e => e.paymentMethod === "Cash").reduce((s, e) => s + e.amount, 0)) : "●●"}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Online Balance */}
+  <div className="rounded-xl sm:rounded-2xl p-3 sm:p-4" style={{ background: card2, border: `1px solid ${border}` }}>
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-1.5">
+        <ArrowLeftRight size={11} color="#3b82f6" />
+        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest" style={{ color: "#3b82f6" }}>Online balance</p>
+      </div>
+     
+    </div>
+
+    {/* Big Balance Number */}
+    {editOnlineBalance ? (
+      <div className="flex gap-1 mb-3">
+        <input
+          type="number" value={onlineBalanceInput}
+          onChange={e => setOnlineBalanceInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && saveOnlineBalance()}
+          className="w-full rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+          style={{ background: inputBg, color: textMain, border: `1px solid ${border}` }}
+        />
+        <button onClick={saveOnlineBalance} className="bg-blue-600 hover:bg-blue-500 px-1.5 rounded-lg text-white">
+          <Check size={12} />
+        </button>
+      </div>
+    ) : (
+      <p className="text-2xl sm:text-3xl font-black text-blue-400 mb-3">
+        {showBalances ? formatCurrency(onlineBalance) : "●●●"}
+      </p>
+    )}
+
+    {/* Rows */}
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <p className="text-xs sm:text-sm font-semibold" style={{ color: textMuted }}>Balance</p>
+        <div className="flex items-center gap-1">
+          
+          <p className="text-sm sm:text-base font-bold" style={{ color: textMain }}>
+            {showBalances ? formatCurrency(onlineBalance + expenses.filter(e => e.paymentMethod === "Online").reduce((s, e) => s + e.amount, 0)) : "●●"}
+          </p>
+        </div>
+      </div>
+      <div className="flex justify-between items-center">
+        <p className="text-xs sm:text-sm font-semibold" style={{ color: textMuted }}>Spent</p>
+        <div className="flex items-center gap-0.5">
+          <span style={{ color: "#ef4444", fontSize: "18px" }}>−</span>
+        
+          <p className="text-sm sm:text-base font-bold text-red-400">
+            {showBalances ? formatCurrency(expenses.filter(e => e.paymentMethod === "Online").reduce((s, e) => s + e.amount, 0)) : "●●"}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+       
 
       {/* Add / Edit Form */}
       <div className="rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-4 sm:mb-5 shadow-xl" style={{ background: card, border: `1px solid ${border}` }}>

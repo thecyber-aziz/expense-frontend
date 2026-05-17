@@ -4,22 +4,34 @@ import { useTheme }            from "../auth/ThemeContext";
 import { TrendingUp }          from "lucide-react";
 import { loadTabMeta, loadTabData, deleteTabStorage, formatCurrency } from "../auth/utils";
 import { createTab as createTabAPI, deleteTab as deleteTabAPI, renameTab as renameTabAPI, getTabs as getBackendTabs } from "../api/tabApi.js";
-import Header                  from "../components/Header";
-import Navbar                  from "../components/Navbar";
-import TabPanel                from "../components/TabPanel";
-import Footer                  from "../components/Footer";
+import Header              from "../components/Header";
+import Navbar              from "../components/Navbar";
+import TabPanel            from "../components/TabPanel";
+import Footer              from "../components/Footer";
+import AddBalanceModal     from "../components/AddBalanceModal";
+import BalanceHistoryModal from "../components/BalanceHistoryModal";
+
 export default function ExpenseTracker({ user, onLogout }) {
   const { dark } = useTheme();
   const { email } = user;
 
-  const [tabs, setTabs]               = useState(() => loadTabMeta(email));
-  const [activeTab, setActiveTab]     = useState(() => {
+  const [tabs, setTabs]           = useState(() => loadTabMeta(email));
+  const [activeTab, setActiveTab] = useState(() => {
     const savedTab = localStorage.getItem(userKey(email, "activeTab"));
     const tabs = loadTabMeta(email);
     return savedTab && tabs.some(t => t.id === savedTab) ? savedTab : tabs[0]?.id;
   });
   const [renamingId, setRenamingId]   = useState(null);
   const [renameValue, setRenameValue] = useState("");
+  const [showBalances, setShowBalances] = useState(true);
+  const [showAddBalance, setShowAddBalance] = useState(false);
+  const [showHistory, setShowHistory]       = useState(false);
+
+  const historyKey = userKey(email, "balance_history");
+  const [balanceHistory, setBalanceHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(historyKey)) || []; }
+    catch { return []; }
+  });
 
   const border    = dark ? "rgba(255,255,255,0.08)" : "rgba(109,40,217,0.12)";
   const textMain  = dark ? "#fff"    : "#1a1a2e";
@@ -29,55 +41,34 @@ export default function ExpenseTracker({ user, onLogout }) {
     localStorage.setItem(userKey(email, "tabs_meta"), JSON.stringify(tabs));
   }, [email, tabs]);
 
-  // Save active tab to localStorage
   useEffect(() => {
     localStorage.setItem(userKey(email, "activeTab"), activeTab);
   }, [email, activeTab]);
 
-  // Sync local tabs to backend on component mount
+  useEffect(() => {
+    localStorage.setItem(historyKey, JSON.stringify(balanceHistory));
+  }, [balanceHistory, historyKey]);
+
   useEffect(() => {
     const syncTabsToBackend = async () => {
       try {
-        // First, fetch existing tabs from backend
         const response = await getBackendTabs();
         const backendTabIds = new Set((response.data || []).map(t => t.tabId));
-
-        // Then, only create tabs that don't exist on backend
         for (const tab of tabs) {
-          if (backendTabIds.has(tab.id)) {
-            console.log(`✅ Tab ${tab.id} already exists on backend`);
-          } else {
-            try {
-              await createTabAPI(tab.name, tab.id);
-              console.log(`✅ Tab ${tab.id} synced to backend`);
-            } catch (err) {
-              if (err.message === 'Tab already exists') {
-                console.log(`✅ Tab ${tab.id} already synced on backend (concurrent sync)`);
-              } else {
-                console.error(`⚠️ Failed to sync tab ${tab.id}:`, err.message);
-              }
-            }
+          if (!backendTabIds.has(tab.id)) {
+            try { await createTabAPI(tab.name, tab.id); }
+            catch (err) { if (err.message !== "Tab already exists") console.error(`⚠️`, err.message); }
           }
         }
       } catch (err) {
-        console.error('⚠️ Failed to fetch backend tabs:', err.message);
-        // Fallback: try to sync all tabs anyway
         for (const tab of tabs) {
-          try {
-            await createTabAPI(tab.name, tab.id);
-          } catch (err) {
-            if (err.message !== 'Tab already exists') {
-              console.error(`⚠️ Failed to sync tab ${tab.id}:`, err.message);
-            }
-          }
+          try { await createTabAPI(tab.name, tab.id); }
+          catch (err) { if (err.message !== "Tab already exists") console.error(`⚠️`, err.message); }
         }
       }
     };
-    
-    if (tabs.length > 0) {
-      syncTabsToBackend();
-    }
-  }, []); // Only run once on mount
+    if (tabs.length > 0) syncTabsToBackend();
+  }, []);
 
   const allTotal = tabs.reduce((sum, tab) => {
     const data = loadTabData(email, tab.id);
@@ -87,22 +78,14 @@ export default function ExpenseTracker({ user, onLogout }) {
   const addTab = () => {
     const newId = `tab_${Date.now()}`;
     const newTabName = `Tab ${tabs.length + 1}`;
-    
-    // Sync to backend
-    createTabAPI(newTabName, newId).catch(err => console.error('Failed to sync tab to backend:', err));
-    
-    // Update local state
+    createTabAPI(newTabName, newId).catch(err => console.error(err));
     setTabs(prev => [...prev, { id: newId, name: newTabName }]);
     setActiveTab(newId);
   };
 
   const deleteTab = (tabId) => {
     if (tabs.length === 1) return;
-    
-    // Sync deletion to backend
-    deleteTabAPI(tabId).catch(err => console.error('Failed to delete tab from backend:', err));
-    
-    // Update local state
+    deleteTabAPI(tabId).catch(err => console.error(err));
     deleteTabStorage(email, tabId);
     const rest = tabs.filter(t => t.id !== tabId);
     setTabs(rest);
@@ -112,13 +95,14 @@ export default function ExpenseTracker({ user, onLogout }) {
   const startRename = (tab) => { setRenamingId(tab.id); setRenameValue(tab.name); };
   const saveRename  = () => {
     if (!renameValue.trim()) return;
-    
-    // Sync rename to backend
-    renameTabAPI(renamingId, renameValue.trim()).catch(err => console.error('Failed to rename tab on backend:', err));
-    
-    // Update local state
+    renameTabAPI(renamingId, renameValue.trim()).catch(err => console.error(err));
     setTabs(prev => prev.map(t => t.id === renamingId ? { ...t, name: renameValue.trim() } : t));
     setRenamingId(null);
+  };
+
+  const handleSaveBalance = (entry) => {
+    // entry has { cashAmount, onlineAmount, note, createdAt }
+    setBalanceHistory(prev => [...prev, entry]);
   };
 
   const activeTabName = tabs.find(t => t.id === activeTab)?.name || "";
@@ -139,7 +123,12 @@ export default function ExpenseTracker({ user, onLogout }) {
       </div>
 
       <div className="relative w-full max-w-xl lg:max-w-2xl mx-auto px-3 sm:px-5 py-5 sm:py-8">
-        <Header />
+        <Header
+          onAddBalance={() => setShowAddBalance(true)}
+          showBalances={showBalances}
+          onToggleBalances={() => setShowBalances(p => !p)}
+          onShowHistory={() => setShowHistory(true)}
+        />
 
         {/* Combined total */}
         {tabs.length > 1 && (
@@ -148,7 +137,9 @@ export default function ExpenseTracker({ user, onLogout }) {
             <span className="text-xs sm:text-sm flex items-center gap-1.5" style={{ color: textMuted }}>
               <TrendingUp size={13} /> Combined Total ({tabs.length} tabs)
             </span>
-            <span className="text-base sm:text-lg font-black text-violet-400">{formatCurrency(allTotal)}</span>
+            <span className="text-base sm:text-lg font-black text-violet-400">
+              {showBalances ? formatCurrency(allTotal) : "₹••••"}
+            </span>
           </div>
         )}
 
@@ -160,10 +151,29 @@ export default function ExpenseTracker({ user, onLogout }) {
           addTab={addTab} deleteTab={deleteTab}
         />
 
-        <TabPanel key={activeTab} email={email} tabId={activeTab} tabName={activeTabName} dark={dark} />
+        <TabPanel
+          key={activeTab}
+          email={email}
+          tabId={activeTab}
+          tabName={activeTabName}
+          dark={dark}
+          showBalances={showBalances}
+        />
 
         <Footer />
       </div>
+
+      <AddBalanceModal
+        isOpen={showAddBalance}
+        onClose={() => setShowAddBalance(false)}
+        onSaveBalance={handleSaveBalance}
+      />
+
+      <BalanceHistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+        history={balanceHistory}
+      />
     </div>
   );
 }
